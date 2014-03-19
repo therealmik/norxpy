@@ -208,6 +208,47 @@ def runtests():
 
 	print("Bits affected:")
 	print(bitcount(permuted ^ unpermuted))
+	print()
+
+	print("Average Diffusion rounds for G:")
+	print("64:", test_diffusion_64())
+	print("32:", test_diffusion_32())
+
+def test_diffusion_64():
+	"""Test how many rounds it takes to have > 31 bits set"""
+	F = NORX_F(64)
+	total = 0
+
+	for i in range(4):
+		for j in range(64):
+			row = numpy.zeros(4, dtype=numpy.uint64)
+			row[i] = numpy.uint64(1 << j)
+			bits = 1
+			rounds = 0
+			while bits < 31:
+				F.G(row)
+				bits = bitcount(row).sum() / 4
+				rounds += 1
+			total += rounds
+	return total / (4*64)
+
+def test_diffusion_32():
+	"""Test how many rounds it takes to have > 31 bits set"""
+	F = NORX_F(32)
+	total = 0
+
+	for i in range(4):
+		for j in range(32):
+			row = numpy.zeros(4, dtype=numpy.uint32)
+			row[i] = numpy.uint32(1 << j)
+			bits = 1
+			rounds = 0
+			while bits < 15:
+				F.G(row)
+				bits = bitcount(row).sum() / 4
+				rounds += 1
+			total += rounds
+	return total / (4*32)
 
 if __name__ == "__main__":
 	runtests()
