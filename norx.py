@@ -229,9 +229,9 @@ def test_g_diffusion_64():
 			row[i] = numpy.uint64(1 << j)
 			bits = 1
 			rounds = 0
-			while bits < 32.0:
+			while bits < 128:
 				F.G(row)
-				bits = bitcount(row).sum() / 4
+				bits = bitcount(row).sum()
 				rounds += 1
 			total += rounds
 	return total / (4*64)
@@ -247,9 +247,9 @@ def test_g_diffusion_32():
 			row[i] = numpy.uint32(1 << j)
 			bits = 1
 			rounds = 0
-			while bits < 16.0:
+			while bits < 64:
 				F.G(row)
-				bits = bitcount(row).sum() / 4
+				bits = bitcount(row).sum()
 				rounds += 1
 			total += rounds
 	return total / (4*32)
@@ -266,9 +266,9 @@ def test_f_diffusion_64():
 				state[i,j+2] = numpy.uint64(1 << k)
 				bits = 1
 				rounds = 0
-				while bits < 32.0:
+				while bits < 512:
 					F(state)
-					bits = bitcount(state).sum() / 16
+					bits = bitcount(state).sum()
 					rounds += 1
 				total += rounds
 	return total / (2*4*64)
@@ -285,9 +285,9 @@ def test_f_diffusion_32():
 				state[i,j+2] = numpy.uint32(1 << k)
 				bits = 1
 				rounds = 0
-				while bits < 16.0:
+				while bits < 256:
 					F(state)
-					bits = bitcount(state).sum() / 16
+					bits = bitcount(state).sum()
 					rounds += 1
 				total += rounds
 	return total / (2*4*64)
