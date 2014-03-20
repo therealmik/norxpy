@@ -15,6 +15,8 @@ This implementation is intended as a tool to study this cipher, not
 as a high-performance or secure implementation."""
 
 import numpy
+import os
+
 
 class NORX_F(object):
 	"""The NORX round function.
@@ -225,13 +227,15 @@ def test_g_diffusion_64():
 
 	for i in range(4):
 		for j in range(64):
-			row = numpy.zeros(4, dtype=numpy.uint64)
+			row = numpy.fromstring(os.urandom(32), dtype=numpy.uint64)
+			row[0:2] = numpy.zeros(2, dtype=numpy.uint64)
+			orig = row.copy()
 			row[i] = numpy.uint64(1 << j)
 			bits = 1
 			rounds = 0
 			while bits < 128:
 				F.G(row)
-				bits = bitcount(row).sum()
+				bits = bitcount(row ^ orig).sum()
 				rounds += 1
 			total += rounds
 	return total / (4*64)
@@ -243,13 +247,15 @@ def test_g_diffusion_32():
 
 	for i in range(4):
 		for j in range(32):
-			row = numpy.zeros(4, dtype=numpy.uint32)
+			row = numpy.fromstring(os.urandom(16), dtype=numpy.uint32)
+			row[0:2] = numpy.zeros(2, dtype=numpy.uint32)
+			orig = row.copy()
 			row[i] = numpy.uint32(1 << j)
 			bits = 1
 			rounds = 0
 			while bits < 64:
 				F.G(row)
-				bits = bitcount(row).sum()
+				bits = bitcount(row ^ orig).sum()
 				rounds += 1
 			total += rounds
 	return total / (4*32)
@@ -262,13 +268,15 @@ def test_f_diffusion_64():
 	for i in range(4):
 		for j in range(2):
 			for k in range(64):
-				state = numpy.zeros((4, 4), dtype=numpy.uint64)
-				state[i,j+2] = numpy.uint64(1 << k)
+				state = numpy.fromstring(os.urandom(128), dtype=numpy.uint64).reshape((4, 4))
+				state[0:2,:] = numpy.zeros((2, 4), dtype=numpy.uint64) # Attacker controlled
+				orig = state.copy()
+				state[i,j+2] ^= numpy.uint64(1 << k)
 				bits = 1
 				rounds = 0
 				while bits < 512:
 					F(state)
-					bits = bitcount(state).sum()
+					bits = bitcount(state ^ orig).sum()
 					rounds += 1
 				total += rounds
 	return total / (2*4*64)
@@ -281,16 +289,18 @@ def test_f_diffusion_32():
 	for i in range(4):
 		for j in range(2):
 			for k in range(32):
-				state = numpy.zeros((4, 4), dtype=numpy.uint32)
-				state[i,j+2] = numpy.uint32(1 << k)
+				state = numpy.fromstring(os.urandom(64), dtype=numpy.uint32).reshape((4, 4))
+				state[0:2,:] = numpy.zeros((2, 4), dtype=numpy.uint64) # Attacker controlled
+				orig = state.copy()
+				state[i,j+2] ^= numpy.uint32(1 << k)
 				bits = 1
 				rounds = 0
 				while bits < 256:
 					F(state)
-					bits = bitcount(state).sum()
+					bits = bitcount(orig ^ state).sum()
 					rounds += 1
 				total += rounds
-	return total / (2*4*64)
+	return total / (2*4*32)
 
 if __name__ == "__main__":
 	runtests()
