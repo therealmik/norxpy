@@ -210,12 +210,16 @@ def runtests():
 	print(bitcount(permuted ^ unpermuted))
 	print()
 
-	print("Average Diffusion rounds for G:")
-	print("64:", test_diffusion_64())
-	print("32:", test_diffusion_32())
+	print("Average diffusion rounds for G:")
+	print("64:", test_g_diffusion_64())
+	print("32:", test_g_diffusion_32())
 
-def test_diffusion_64():
-	"""Test how many rounds it takes to have > 31 bits set"""
+	print("Average diffusion rounds for F:")
+	print("64:", test_f_diffusion_64())
+	print("32:", test_f_diffusion_32())
+
+def test_g_diffusion_64():
+	"""Test how many rounds it takes to have >= 31 bits set from a single bit"""
 	F = NORX_F(64)
 	total = 0
 
@@ -225,15 +229,15 @@ def test_diffusion_64():
 			row[i] = numpy.uint64(1 << j)
 			bits = 1
 			rounds = 0
-			while bits < 31:
+			while bits < 32.0:
 				F.G(row)
 				bits = bitcount(row).sum() / 4
 				rounds += 1
 			total += rounds
 	return total / (4*64)
 
-def test_diffusion_32():
-	"""Test how many rounds it takes to have > 31 bits set"""
+def test_g_diffusion_32():
+	"""Test how many rounds it takes to have >= 16 bits set from a single bit"""
 	F = NORX_F(32)
 	total = 0
 
@@ -243,12 +247,50 @@ def test_diffusion_32():
 			row[i] = numpy.uint32(1 << j)
 			bits = 1
 			rounds = 0
-			while bits < 15:
+			while bits < 16.0:
 				F.G(row)
 				bits = bitcount(row).sum() / 4
 				rounds += 1
 			total += rounds
 	return total / (4*32)
+
+def test_f_diffusion_64():
+	"""Test how many rounds it takes to have >= 32 bits set from a single bit in the /c/ area"""
+	F = NORX_F(64)
+	total = 0
+
+	for i in range(4):
+		for j in range(2):
+			for k in range(64):
+				state = numpy.zeros((4, 4), dtype=numpy.uint64)
+				state[i,j+2] = numpy.uint64(1 << k)
+				bits = 1
+				rounds = 0
+				while bits < 32.0:
+					F(state)
+					bits = bitcount(state).sum() / 16
+					rounds += 1
+				total += rounds
+	return total / (2*4*64)
+
+def test_f_diffusion_32():
+	"""Test how many rounds it takes to have >= 16 bits set from a single bit in the /c/ area"""
+	F = NORX_F(32)
+	total = 0
+
+	for i in range(4):
+		for j in range(2):
+			for k in range(32):
+				state = numpy.zeros((4, 4), dtype=numpy.uint32)
+				state[i,j+2] = numpy.uint32(1 << k)
+				bits = 1
+				rounds = 0
+				while bits < 16.0:
+					F(state)
+					bits = bitcount(state).sum() / 16
+					rounds += 1
+				total += rounds
+	return total / (2*4*64)
 
 if __name__ == "__main__":
 	runtests()
